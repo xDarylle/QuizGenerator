@@ -1,4 +1,4 @@
-from transformers import T5ForConditionalGeneration, T5Tokenizer, AutoTokenizer, AutoModelWithLMHead
+from transformers import T5ForConditionalGeneration, T5Tokenizer, AutoTokenizer, AutoModelForSeq2SeqLM
 import nltk
 from nltk import tokenize
 import random
@@ -12,6 +12,7 @@ accepted = ['NNS', 'NN', 'JJS', 'JJ', 'NNP', 'NNPS', 'VB', 'VBD']
 
 # models that will be used
 questioning_model = "ThomasSimonini/t5-end2end-question-generation"
+tokenizer_model = "allenai/t5-small-squad2-question-generation"
 answering_model = "MaRiOrOsSi/t5-base-finetuned-question-answering"
 
 QuestionModel, AnswerModel = None, None
@@ -19,16 +20,16 @@ QuestionTokenizer, AnswerTokenizer = None, None
 
 Words = None
 
-# load models to memory
+# load models to memory and download nltk resources
 def initialize():
     global QuestionModel, AnswerModel, QuestionTokenizer, AnswerTokenizer
     global Words
 
     print('Initializing t5 Models...')
     QuestionModel = T5ForConditionalGeneration.from_pretrained(questioning_model)
-    QuestionTokenizer = T5Tokenizer.from_pretrained(questioning_model)
+    QuestionTokenizer = T5Tokenizer.from_pretrained(tokenizer_model)
 
-    AnswerModel = AutoModelWithLMHead.from_pretrained(answering_model)
+    AnswerModel = AutoModelForSeq2SeqLM.from_pretrained(answering_model)
     AnswerTokenizer = AutoTokenizer.from_pretrained(answering_model)
 
     # check if nltk resources is available else download the resources
@@ -46,13 +47,13 @@ def initialize():
 # generate question using ThomasSimonini/t5-end2end-question-generation model
 def getQuestions(input_string, **generator_args):
     generator_args = {
-        "max_length": 256,
+        "max_new_tokens": 256,
         "num_beams": 3,
         "length_penalty": 1.5,
         "no_repeat_ngram_size": 3,
         "early_stopping": True,
     }
-    input_string = "generate questions: " + input_string + " </s>"
+    input_string = "generate questions: " + input_string
     input_ids = QuestionTokenizer.encode(input_string, return_tensors="pt")
     res = QuestionModel.generate(input_ids, **generator_args)
     output = QuestionTokenizer.batch_decode(res, skip_special_tokens=True)
