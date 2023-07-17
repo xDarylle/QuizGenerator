@@ -1,0 +1,1 @@
+from generator.generator import initialize, generate_quiz
