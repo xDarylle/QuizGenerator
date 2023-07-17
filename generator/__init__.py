@@ -1,1 +1,1 @@
-from generator.generator import initialize, generate_quiz
+from generator.model import initialize, generate_quiz
